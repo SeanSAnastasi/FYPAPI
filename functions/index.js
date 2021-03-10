@@ -24,40 +24,48 @@ app.post("/data", (req, res) => {
 
     db.collection("HeartRate").add({})
     .then(function(docRef) {
+        var dataContainer = [];
+
+        
+
         for(var i = 0; i< obj.length; i++){
             const hrmData = {
                 date: obj[i].date,
                 heartRate: obj[i].heartRate
             }
-            console.log(hrmData);
-            console.log(obj[i]);
-            console.log(JSON.stringify(obj[i]));
-            db.collection('HeartRate').doc(JSON.stringify(obj[i].date)).set({hrmData},{merge: true});
+            dataContainer.push(hrmData);
+            
+            
         
         }
-
-
-        console.log("Document written with ID: ", docRef.id);
+        const completeData = {
+            data: dataContainer
+        }
+        
+        db.collection('HeartRate').doc(docRef.id).set(completeData);
+        
     })
     .catch(function(error) {
         console.error("Error adding document: ", error);
     });
-    
 
-    
+});
 
-    // obj.forEach((newObj, index, array) => {
-    //     const hrmData = {
-    //         date: newobj.date,
-    //         heartRate: newobj.heartRate
-    //     }
-        
-    // });
-    
-    
-    
+app.get("/getdata", async (req,res) => {
 
-    
+    const hrmData = db.collection('HeartRate');
+    const snapshot = await hrmData.get();
+    if (snapshot.empty) {
+    console.log('No matching documents.');
+    return;
+    }  
+    var dataContainer = [];
+    snapshot.forEach(doc => {
+     dataContainer.push(doc.data());
+    });
+
+    res.send(dataContainer);
+
 });
 
 exports.app = functions.https.onRequest(app);
